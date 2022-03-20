@@ -1,0 +1,24 @@
+--Constrains
+--Unique ima jedinstvene vrijednosti ali moze biti null
+--Surogatni nametnuti kljuc JMBG
+--PK = Unique + NOT NULL
+--Jedna kolona jedan primarni kljuc za svaku tabelu...
+--rownum - broj reda
+--5 konstreita: check, unique, pk, fk, not null.
+--
+
+SELECT constraint_name, constraint_type
+FROM user_constraints
+WHERE TABLE_name = 'EMPLOYEES';
+
+
+
+
+--Pogledi(view)
+
+CREATE VIEW emo_30
+AS SELECT employee_id EMPLOYEE_NUMBER,
+          last_name NAME, salary SALARY
+
+
+

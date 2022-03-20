@@ -1,0 +1,119 @@
+SELECT * FROM all_triggers;
+SELECT * FROM user_triggers;
+
+--Prijer sa predavanja
+DROP TABLE tbl;
+CREATE TABLE tbl (id NUMBER PRIMARY KEY,
+                  name VARCHAR2(30),
+                  datum DATE,
+                  suser CHAR(10) DEFAULT USER,
+                  sdat DATE DEFAULT SYSDATE,
+                  auser CHAR(10) DEFAULT USER,
+                  adat DATE DEFAULT SYSDATE,
+                  note VARCHAR2(256) );
+                  --auser-prvi korisnik koji je napravio update
+
+INSERT INTO tbl(id, name, datum)
+       VALUES ('1', 'Emir', Trunc(sysdate));
+
+INSERT INTO tbl(id, name, datum, suser, sdat, auser, adat)
+       VALUES ('-1', 'Emir', SYSDATE-1, USER, SYSDATE-1, 'MA12345', SYSDATE-2);
+
+
+SELECT * FROM tbl;
+
+CREATE OR REPLACE TRIGGER updTBL
+BEFORE INSERT ON tbl
+REFERENCING NEW AS NEW OLD AS OLD
+FOR EACH ROW
+DECLARE lv_id NUMBER;
+BEGIN
+   SELECT Max( Nvl(id, 0) + 1 ) INTO lv_id FROM tbl;
+   :new.id := lv_id;
+   :new.suser := USER;
+   :new.sdat := SYSDATE;
+   :new.auser := USER;
+   :new.adat := SYSDATE;
+   :new.note := 'Slog ubacen u bazu ' || To_Char(SYSDATE);
+END;
+
+INSERT INTO tbl(id, name, datum, suser, sdat, auser, adat)
+       VALUES ('-2', 'Mujo', SYSDATE-3, USER, SYSDATE-3, 'MA12345', SYSDATE-5);
+
+SELECT * FROM tbl;
+
+--Primjeri Tutorijal
+CREATE OR REPLACE TRIGGER Provjera
+AFTER INSERT OR DELETE ON Rente
+DECLARE sek NUMBER(1)
+BEGIN
+SELECT testsek.NEXTVAL INTO sek FROM dual;
+END;
+
+CREATE TRIGGER Provjera2
+BEFORE UPDATE OF Cijena ON Auta
+REFERENCING NEW AS NEW AS NEW OLD AS OLD
+FOR EACH ROW WHEN(NEW.cijena > OLD.cijena)
+BEGIN
+   RAISE aplication error (-)
+END;
+
+
+--Z1
+DROP TABLE zap;
+
+CREATE TABLE zap (Sifra_zaposleng NUMBER,
+                  Naziv_zaposlenog VARCHAR2(100),
+                  Odjel VARCHAR2(50),
+                  Sifra_posla NUMBER,
+                  Naziv_posla VARCHAR2(50),
+                  Plata NUMBER,
+                  Dodatak_na_platu NUMBER );
+
+ALTER TABLE zap ADD (Sifra NUMBER,
+                     CONSTRAINT c_zap_p_k PRIMARY KEY(Sifra) );
+
+--II nacin
+CREATE TABLE zap AS
+       SELECT e.employee_id "Sifra zaposleng",
+              e.first_name || '' || e.last_name "Naziv zaposlenog",
+              d.department_name "Naziv odjela",
+              j.job_id "Sifra posla",
+              j.job_title "Naziv posla",
+              e.salary "Plata",
+              e.salary*(Nvl(e.commission_pct, 0)) "Dodatak na platu"
+       FROM employees e, departments d, jobs j
+       WHERE e.department_id = d.department_id
+         AND e.job_id = j.job_id;
+
+ALTER TABLE zap ADD (Sifra NUMBER );
+
+CREATE SEQUENCE Zap_pk
+INCREMENT BY 1
+START WITH 1
+MAXVALUE 10000
+NOCACHE
+NOCYCLE;
+
+UPDATE zap
+SET sifra = zap_pk.NEXTVAL;
+
+ALTER TABLE zap ADD CONSTRAINT c_zap_p_k PRIMARY KEY(Sifra);
+
+SELECT * FROM zap;
+
+
+--Raise error (20000-20999)
+CREATE OR REPLACE TRIGGER updZAP
+BEFORE UPDATE ON zap
+REFERENCING NEW AS NEW OLD AS OLD
+FOR EACH ROW
+DECLARE lv_god NUMBER;
+BEGIN
+  Raise_Application_Error(-20001, 'Nije moguce mijenjati podatke zaposlenika koji su zaposleni nako 1998 godine.');
+END;
+
+SELECT *
+FROM user_objects
+WHERE object_type LIKE 'TRIGGER' ;
+
